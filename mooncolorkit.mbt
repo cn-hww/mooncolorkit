@@ -222,3 +222,39 @@ pub fn contrast_ratio_x100(a : Rgb, b : Rgb) -> Int {
 pub fn passes_aa_text(foreground : Rgb, background : Rgb) -> Bool {
   contrast_ratio_x100(foreground, background) >= 450
 }
+
+///|
+pub fn Rgb::mix(self : Rgb, other : Rgb, weight_per_mille : Int) -> Rgb {
+  let weight = clamp_per_mille(weight_per_mille)
+  let inverse = 1000 - weight
+  Rgb::new(
+    (self.r * inverse + other.r * weight) / 1000,
+    (self.g * inverse + other.g * weight) / 1000,
+    (self.b * inverse + other.b * weight) / 1000,
+  )
+}
+
+///|
+pub fn gradient(start : Rgb, end : Rgb, steps : Int) -> Array[Rgb] {
+  let count = if steps <= 1 { 1 } else { steps }
+  let colors : Array[Rgb] = []
+  if count == 1 {
+    colors.push(start)
+    return colors
+  }
+  for i = 0; i < count; i = i + 1 {
+    colors.push(start.mix(end, i * 1000 / (count - 1)))
+  }
+  colors
+}
+
+///|
+fn clamp_per_mille(value : Int) -> Int {
+  if value < 0 {
+    0
+  } else if value > 1000 {
+    1000
+  } else {
+    value
+  }
+}

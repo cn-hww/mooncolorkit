@@ -54,3 +54,22 @@ test "relative luminance and contrast use stable integer scale" {
   assert_eq(@mooncolorkit.contrast_ratio_x100(black, white), 2100)
   assert_true(@mooncolorkit.passes_aa_text(black, white))
 }
+
+///|
+test "rgb mix blends channels by per mille weight" {
+  let red = @mooncolorkit.Rgb::new(255, 0, 0)
+  let blue = @mooncolorkit.Rgb::new(0, 0, 255)
+  assert_eq(red.mix(blue, 500).to_hex(), "#7F007F")
+}
+
+///|
+test "gradient includes start and end colors" {
+  let colors = @mooncolorkit.gradient(
+    @mooncolorkit.Rgb::new(0, 0, 0),
+    @mooncolorkit.Rgb::new(255, 255, 255),
+    3,
+  )
+  assert_eq(colors.length(), 3)
+  assert_eq(colors[0].to_hex(), "#000000")
+  assert_eq(colors[2].to_hex(), "#FFFFFF")
+}
