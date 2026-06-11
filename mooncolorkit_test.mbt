@@ -92,3 +92,22 @@ test "palettes expose color counts and json" {
   assert_eq(accents.length(), 3)
   assert_true(mono.to_json().contains("\"colors\""))
 }
+
+///|
+test "readable text chooses black or white by contrast" {
+  assert_eq(
+    @mooncolorkit.readable_text_on(@mooncolorkit.Rgb::new(255, 255, 255)).to_hex(),
+    "#000000",
+  )
+  assert_eq(
+    @mooncolorkit.readable_text_on(@mooncolorkit.Rgb::new(0, 0, 0)).to_hex(),
+    "#FFFFFF",
+  )
+}
+
+///|
+test "text pair contains background and readable foreground" {
+  let pair = @mooncolorkit.ensure_text_pair(@mooncolorkit.Rgb::new(20, 20, 20))
+  assert_eq(pair.length(), 2)
+  assert_eq(pair.colors[1].to_hex(), "#FFFFFF")
+}

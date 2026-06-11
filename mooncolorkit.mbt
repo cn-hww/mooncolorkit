@@ -308,3 +308,20 @@ pub fn Palette::to_json(self : Palette) -> String {
   buf.write_string("]}")
   buf.to_string()
 }
+
+///|
+pub fn readable_text_on(background : Rgb) -> Rgb {
+  let black = Rgb::new(0, 0, 0)
+  let white = Rgb::new(255, 255, 255)
+  if contrast_ratio_x100(black, background) >=
+    contrast_ratio_x100(white, background) {
+    black
+  } else {
+    white
+  }
+}
+
+///|
+pub fn ensure_text_pair(background : Rgb) -> Palette {
+  Palette::new([background, readable_text_on(background)])
+}
