@@ -111,3 +111,16 @@ test "text pair contains background and readable foreground" {
   assert_eq(pair.length(), 2)
   assert_eq(pair.colors[1].to_hex(), "#FFFFFF")
 }
+
+///|
+test "colors export css rgb and variables" {
+  let color = @mooncolorkit.Rgb::new(1, 2, 3)
+  let palette = @mooncolorkit.Palette::new([
+    color,
+    @mooncolorkit.Rgb::new(4, 5, 6),
+  ])
+  assert_eq(color.to_css_rgb(), "rgb(1, 2, 3)")
+  assert_true(
+    palette.to_css_vars(prefix="brand").contains("--brand-1: #040506;"),
+  )
+}

@@ -325,3 +325,23 @@ pub fn readable_text_on(background : Rgb) -> Rgb {
 pub fn ensure_text_pair(background : Rgb) -> Palette {
   Palette::new([background, readable_text_on(background)])
 }
+
+///|
+pub fn Rgb::to_css_rgb(self : Rgb) -> String {
+  "rgb(\{self.r}, \{self.g}, \{self.b})"
+}
+
+///|
+pub fn Palette::to_css_vars(
+  self : Palette,
+  prefix? : String = "color",
+) -> String {
+  let buf = StringBuilder()
+  for i = 0; i < self.colors.length(); i = i + 1 {
+    buf.write_string("--\{prefix}-\{i}: \{self.colors[i].to_hex()};")
+    if i + 1 < self.colors.length() {
+      buf.write_string("\n")
+    }
+  }
+  buf.to_string()
+}
