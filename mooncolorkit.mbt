@@ -13,6 +13,11 @@ pub(all) struct Hsl {
 } derive(Debug, Eq)
 
 ///|
+pub(all) struct Palette {
+  colors : Array[Rgb]
+} derive(Debug)
+
+///|
 pub fn Rgb::new(r : Int, g : Int, b : Int) -> Rgb {
   { r: clamp_channel(r), g: clamp_channel(g), b: clamp_channel(b) }
 }
@@ -20,6 +25,11 @@ pub fn Rgb::new(r : Int, g : Int, b : Int) -> Rgb {
 ///|
 pub fn Hsl::new(h : Int, s : Int, l : Int) -> Hsl {
   { h: normalize_hue(h), s: clamp_percent(s), l: clamp_percent(l) }
+}
+
+///|
+pub fn Palette::new(colors : Array[Rgb]) -> Palette {
+  { colors, }
 }
 
 ///|
@@ -257,4 +267,44 @@ fn clamp_per_mille(value : Int) -> Int {
   } else {
     value
   }
+}
+
+///|
+pub fn complementary(color : Rgb) -> Rgb {
+  Rgb::new(255 - color.r, 255 - color.g, 255 - color.b)
+}
+
+///|
+pub fn monochrome_palette(base : Rgb) -> Palette {
+  Palette::new([
+    base.mix(Rgb::new(255, 255, 255), 650),
+    base.mix(Rgb::new(255, 255, 255), 350),
+    base,
+    base.mix(Rgb::new(0, 0, 0), 300),
+    base.mix(Rgb::new(0, 0, 0), 550),
+  ])
+}
+
+///|
+pub fn accent_palette(base : Rgb) -> Palette {
+  Palette::new([base, complementary(base), base.mix(complementary(base), 500)])
+}
+
+///|
+pub fn Palette::length(self : Palette) -> Int {
+  self.colors.length()
+}
+
+///|
+pub fn Palette::to_json(self : Palette) -> String {
+  let buf = StringBuilder()
+  buf.write_string("{\"colors\":[")
+  for i = 0; i < self.colors.length(); i = i + 1 {
+    if i > 0 {
+      buf.write_char(',')
+    }
+    buf.write_string("\"" + self.colors[i].to_hex() + "\"")
+  }
+  buf.write_string("]}")
+  buf.to_string()
 }

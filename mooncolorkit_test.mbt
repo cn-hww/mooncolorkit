@@ -73,3 +73,22 @@ test "gradient includes start and end colors" {
   assert_eq(colors[0].to_hex(), "#000000")
   assert_eq(colors[2].to_hex(), "#FFFFFF")
 }
+
+///|
+test "complementary color inverts channels" {
+  assert_eq(
+    @mooncolorkit.complementary(@mooncolorkit.Rgb::new(255, 128, 0)).to_hex(),
+    "#007FFF",
+  )
+}
+
+///|
+test "palettes expose color counts and json" {
+  let mono = @mooncolorkit.monochrome_palette(
+    @mooncolorkit.Rgb::new(40, 120, 200),
+  )
+  let accents = @mooncolorkit.accent_palette(@mooncolorkit.Rgb::new(10, 20, 30))
+  assert_eq(mono.length(), 5)
+  assert_eq(accents.length(), 3)
+  assert_true(mono.to_json().contains("\"colors\""))
+}
