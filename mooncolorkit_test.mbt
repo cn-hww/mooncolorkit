@@ -124,3 +124,14 @@ test "colors export css rgb and variables" {
     palette.to_css_vars(prefix="brand").contains("--brand-1: #040506;"),
   )
 }
+
+///|
+test "theme chooses readable foreground and palette" {
+  let theme = @mooncolorkit.Theme::new(
+    @mooncolorkit.Rgb::new(0, 0, 0),
+    @mooncolorkit.Rgb::new(40, 120, 200),
+  )
+  assert_eq(theme.foreground.to_hex(), "#FFFFFF")
+  assert_eq(theme.palette.length(), 5)
+  assert_true(theme.to_json().contains("\"accent\":\"#2878C8\""))
+}

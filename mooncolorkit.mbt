@@ -18,6 +18,14 @@ pub(all) struct Palette {
 } derive(Debug)
 
 ///|
+pub(all) struct Theme {
+  background : Rgb
+  foreground : Rgb
+  accent : Rgb
+  palette : Palette
+} derive(Debug)
+
+///|
 pub fn Rgb::new(r : Int, g : Int, b : Int) -> Rgb {
   { r: clamp_channel(r), g: clamp_channel(g), b: clamp_channel(b) }
 }
@@ -30,6 +38,16 @@ pub fn Hsl::new(h : Int, s : Int, l : Int) -> Hsl {
 ///|
 pub fn Palette::new(colors : Array[Rgb]) -> Palette {
   { colors, }
+}
+
+///|
+pub fn Theme::new(background : Rgb, accent : Rgb) -> Theme {
+  {
+    background,
+    foreground: readable_text_on(background),
+    accent,
+    palette: monochrome_palette(accent),
+  }
 }
 
 ///|
@@ -344,4 +362,9 @@ pub fn Palette::to_css_vars(
     }
   }
   buf.to_string()
+}
+
+///|
+pub fn Theme::to_json(self : Theme) -> String {
+  "{\"background\":\"\{self.background.to_hex()}\",\"foreground\":\"\{self.foreground.to_hex()}\",\"accent\":\"\{self.accent.to_hex()}\",\"palette\":\{self.palette.to_json()}}"
 }
