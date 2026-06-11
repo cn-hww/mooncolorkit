@@ -26,3 +26,21 @@ test "rgb parses hex without hash and falls back on short input" {
   assert_eq(@mooncolorkit.Rgb::from_hex("FF0000").to_hex(), "#FF0000")
   assert_eq(@mooncolorkit.Rgb::from_hex("#12").to_hex(), "#000000")
 }
+
+///|
+test "hsl normalizes hue and percent values" {
+  let hsl = @mooncolorkit.Hsl::new(420, -1, 120)
+  assert_eq(hsl.h, 60)
+  assert_eq(hsl.s, 0)
+  assert_eq(hsl.l, 100)
+}
+
+///|
+test "rgb converts primary and gray colors to hsl" {
+  let red = @mooncolorkit.Rgb::new(255, 0, 0).to_hsl()
+  let gray = @mooncolorkit.Rgb::new(128, 128, 128).to_hsl()
+  assert_eq(red.h, 0)
+  assert_eq(red.s, 100)
+  assert_eq(red.l, 50)
+  assert_eq(gray.s, 0)
+}
