@@ -1,6 +1,6 @@
-// import {
-//   "cn-hww/mooncolorkit" @color,
-// }
+import {
+  "cn-hww/mooncolorkit" @color,
+}
 
 options(
   "is-main": true,
