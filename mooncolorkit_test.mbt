@@ -44,3 +44,13 @@ test "rgb converts primary and gray colors to hsl" {
   assert_eq(red.l, 50)
   assert_eq(gray.s, 0)
 }
+
+///|
+test "relative luminance and contrast use stable integer scale" {
+  let black = @mooncolorkit.Rgb::new(0, 0, 0)
+  let white = @mooncolorkit.Rgb::new(255, 255, 255)
+  assert_eq(black.relative_luminance_per_mille(), 0)
+  assert_eq(white.relative_luminance_per_mille(), 1000)
+  assert_eq(@mooncolorkit.contrast_ratio_x100(black, white), 2100)
+  assert_true(@mooncolorkit.passes_aa_text(black, white))
+}

@@ -202,3 +202,23 @@ pub fn Rgb::to_hsl(self : Rgb) -> Hsl {
 pub fn Hsl::to_json(self : Hsl) -> String {
   "{\"h\":\{self.h},\"s\":\{self.s},\"l\":\{self.l}}"
 }
+
+///|
+pub fn Rgb::relative_luminance_per_mille(self : Rgb) -> Int {
+  // Integer approximation of WCAG relative luminance on 0..1000 scale.
+  (self.r * 2126 + self.g * 7152 + self.b * 722) / 2550
+}
+
+///|
+pub fn contrast_ratio_x100(a : Rgb, b : Rgb) -> Int {
+  let la = a.relative_luminance_per_mille()
+  let lb = b.relative_luminance_per_mille()
+  let lighter = max_int(la, lb) + 50
+  let darker = min_int(la, lb) + 50
+  lighter * 100 / darker
+}
+
+///|
+pub fn passes_aa_text(foreground : Rgb, background : Rgb) -> Bool {
+  contrast_ratio_x100(foreground, background) >= 450
+}
