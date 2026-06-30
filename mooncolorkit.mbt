@@ -233,17 +233,38 @@ pub fn Hsl::to_json(self : Hsl) -> String {
 
 ///|
 pub fn Rgb::relative_luminance_per_mille(self : Rgb) -> Int {
-  // Integer approximation of WCAG relative luminance on 0..1000 scale.
-  (self.r * 2126 + self.g * 7152 + self.b * 722) / 2550
+  (self.relative_luminance() * 1000.0).round().to_int()
+}
+
+///|
+fn linearize_srgb(channel : Int) -> Double {
+  let value = channel.to_double() / 255.0
+  if value <= 0.04045 {
+    value / 12.92
+  } else {
+    @math.pow((value + 0.055) / 1.055, 2.4)
+  }
+}
+
+///|
+pub fn Rgb::relative_luminance(self : Rgb) -> Double {
+  linearize_srgb(self.r) * 0.2126 +
+  linearize_srgb(self.g) * 0.7152 +
+  linearize_srgb(self.b) * 0.0722
 }
 
 ///|
 pub fn contrast_ratio_x100(a : Rgb, b : Rgb) -> Int {
-  let la = a.relative_luminance_per_mille()
-  let lb = b.relative_luminance_per_mille()
-  let lighter = max_int(la, lb) + 50
-  let darker = min_int(la, lb) + 50
-  lighter * 100 / darker
+  (contrast_ratio(a, b) * 100.0).round().to_int()
+}
+
+///|
+pub fn contrast_ratio(a : Rgb, b : Rgb) -> Double {
+  let la = a.relative_luminance()
+  let lb = b.relative_luminance()
+  let lighter = Double::max(la, lb) + 0.05
+  let darker = Double::min(la, lb) + 0.05
+  lighter / darker
 }
 
 ///|
