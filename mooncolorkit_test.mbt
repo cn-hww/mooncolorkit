@@ -56,6 +56,81 @@ test "relative luminance and contrast use stable integer scale" {
 }
 
 ///|
+test "wcag contrast linearizes srgb before applying weights" {
+  let gray = @mooncolorkit.Rgb::from_hex("#777777")
+  let white = @mooncolorkit.Rgb::from_hex("#FFFFFF")
+  assert_eq(gray.relative_luminance_per_mille(), 184)
+  assert_eq(@mooncolorkit.contrast_ratio_x100(gray, white), 448)
+  assert_false(@mooncolorkit.passes_aa_text(gray, white))
+}
+
+///|
+test "wcag thresholds are evaluated before display rounding" {
+  let almost = @mooncolorkit.Rgb::from_hex("#777777")
+  let passing = @mooncolorkit.Rgb::from_hex("#767676")
+  let white = @mooncolorkit.Rgb::from_hex("#FFFFFF")
+  assert_true(
+    @mooncolorkit.classify_text_contrast(almost, white) ==
+    @mooncolorkit.WcagLevel::Fail,
+  )
+  assert_true(
+    @mooncolorkit.classify_text_contrast(passing, white) ==
+    @mooncolorkit.WcagLevel::AA,
+  )
+}
+
+///|
+test "wcag classification distinguishes large text" {
+  let foreground = @mooncolorkit.Rgb::from_hex("#949494")
+  let background = @mooncolorkit.Rgb::from_hex("#FFFFFF")
+  assert_true(
+    @mooncolorkit.classify_text_contrast(foreground, background) ==
+    @mooncolorkit.WcagLevel::Fail,
+  )
+  assert_true(
+    @mooncolorkit.classify_text_contrast(
+      foreground,
+      background,
+      large_text=true,
+    ) ==
+    @mooncolorkit.WcagLevel::AA,
+  )
+}
+
+///|
+test "audit report summarizes semantic color roles" {
+  let report = @mooncolorkit.audit_roles([
+    @mooncolorkit.ColorRole::new(
+      "body",
+      @mooncolorkit.Rgb::from_hex("#000000"),
+      @mooncolorkit.Rgb::from_hex("#FFFFFF"),
+    ),
+    @mooncolorkit.ColorRole::new(
+      "hint",
+      @mooncolorkit.Rgb::from_hex("#AAAAAA"),
+      @mooncolorkit.Rgb::from_hex("#FFFFFF"),
+    ),
+  ])
+  assert_eq(report.audits.length(), 2)
+  assert_eq(report.passed_aaa, 1)
+  assert_eq(report.failed, 1)
+  assert_true(report.to_json().contains("\"failed\":1"))
+}
+
+///|
+test "accessible repair finds the smallest sampled passing mix" {
+  let foreground = @mooncolorkit.Rgb::from_hex("#AAAAAA")
+  let background = @mooncolorkit.Rgb::from_hex("#FFFFFF")
+  let repair = @mooncolorkit.suggest_accessible_foreground(
+    foreground, background,
+  )
+  assert_true(repair.achieved)
+  assert_true(@mooncolorkit.contrast_ratio(repair.suggested, background) >= 4.5)
+  assert_true(repair.mix_weight_per_mille > 0)
+  assert_true(repair.to_json().contains("\"achieved\":true"))
+}
+
+///|
 test "rgb mix blends channels by per mille weight" {
   let red = @mooncolorkit.Rgb::new(255, 0, 0)
   let blue = @mooncolorkit.Rgb::new(0, 0, 255)
@@ -134,4 +209,32 @@ test "theme chooses readable foreground and palette" {
   assert_eq(theme.foreground.to_hex(), "#FFFFFF")
   assert_eq(theme.palette.length(), 5)
   assert_true(theme.to_json().contains("\"accent\":\"#2878C8\""))
+}
+
+///|
+test "semantic theme emits audited css variables" {
+  let theme = @mooncolorkit.SemanticTheme::build(
+    "ocean",
+    @mooncolorkit.Rgb::from_hex("#FFFFFF"),
+    @mooncolorkit.Rgb::from_hex("#F4F7FA"),
+    @mooncolorkit.Rgb::from_hex("#1261A0"),
+  )
+  let audit = theme.audit()
+  assert_eq(audit.failed, 0)
+  assert_true(theme.to_css_vars().contains("--color-on-accent:"))
+}
+
+///|
+test "design token output follows dtcg color object format" {
+  let theme = @mooncolorkit.SemanticTheme::build(
+    "night",
+    @mooncolorkit.Rgb::from_hex("#101820"),
+    @mooncolorkit.Rgb::from_hex("#17232E"),
+    @mooncolorkit.Rgb::from_hex("#FFD166"),
+  )
+  let json = theme.to_design_tokens_json()
+  assert_true(json.contains("\"$type\":\"color\""))
+  assert_true(json.contains("\"colorSpace\":\"srgb\""))
+  assert_true(json.contains("\"components\":["))
+  assert_true(json.contains("\"hex\":\"#FFD166\""))
 }
