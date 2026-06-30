@@ -1,5 +1,5 @@
 # MoonColorKit
 
-MoonColorKit 是面向 MoonBit 的颜色空间与可访问性调色基础库。
+MoonColorKit 是面向 MoonBit 的可访问性配色审计与 Design Token 编译库。
 
 完整说明见 [README.mbt.md](README.mbt.md)。

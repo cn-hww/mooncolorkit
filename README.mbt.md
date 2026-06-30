@@ -1,54 +1,73 @@
 # MoonColorKit
 
-MoonColorKit 是一个面向 MoonBit 的颜色空间与可访问性调色基础库，重点提供颜色表示、格式转换、对比度评估、调色板生成和主题导出能力。
+MoonColorKit 是一个面向 MoonBit 的可访问性配色审计与 Design Token 编译库。它接收带有语义名称的前景色、背景色和文本用途，按照 WCAG 规则计算对比度、给出 AA/AAA 结论，并为不合格颜色生成可复现的修复建议；审计通过的主题可继续导出为 DTCG 2025.10 颜色对象和 CSS 变量。
 
-项目不绑定浏览器、Canvas 或任何特定渲染后端，核心包只处理纯算法与可序列化数据，适合在设计工具、数据可视化、WebAssembly UI、CLI 主题生成器和教学示例中复用。
+核心包不依赖浏览器、Canvas、文件系统或特定渲染后端，可用于 WebAssembly UI、组件库、数据可视化、设计系统和 CI 质量门禁。
 
-## 当前能力
+## 为什么不是另一个 colors
 
-- RGB 颜色模型，带通道裁剪和 HEX / JSON / CSS RGB 导出。
-- HEX 字符串解析，支持带 `#` 和不带 `#` 的六位颜色。
-- HSL 表示与 RGB 到 HSL 的基础转换。
-- 相对亮度、对比度和 AA 正文字号可读性判断。
-- 颜色混合、线性渐变、互补色、单色调色板和强调色调色板。
-- 自动选择黑色或白色文本色，生成背景 / 前景配对。
-- `Theme` 组合模型，可一次导出背景色、文字色、强调色和调色板。
-- CLI 演示，可直接输出主题 JSON、CSS 变量和对比度结果。
+MoonBit 生态已有 `bobzhang/colors` 等颜色基础组件，负责 RGBA/HSV 表示、预定义颜色、混合和插值。MoonColorKit 不以替代这些类型为目标，项目关注的是更上一层的工程问题：
 
-## 快速示例
+- 用“正文/背景”“按钮文字/按钮底色”等语义角色描述待审计关系；
+- 按 WCAG 2.x 的 sRGB 线性化公式计算相对亮度和对比度；
+- 区分普通文本与大号文本的 AA、AAA 阈值，阈值判断不使用四舍五入值；
+- 批量生成机器可读审计报告，便于在 CI 中阻止不合格主题进入发布；
+- 搜索改动幅度较小的黑/白混合方向，给出满足目标对比度的修复色；
+- 把审计后的语义主题导出为 DTCG 2025.10 颜色对象和 CSS Custom Properties。
+
+完整边界和逐项对照见 [docs/RELATED_WORK.md](docs/RELATED_WORK.md)。
+
+## 核心 API
 
 ```moonbit nocheck
-let accent = @mooncolorkit.Rgb::from_hex("#2F80ED")
-let theme = @mooncolorkit.Theme::new(
-  @mooncolorkit.Rgb::new(255, 255, 255),
-  accent,
+let report = @mooncolorkit.audit_roles([
+  @mooncolorkit.ColorRole::new(
+    "body/background",
+    @mooncolorkit.Rgb::from_hex("#777777"),
+    @mooncolorkit.Rgb::from_hex("#FFFFFF"),
+  ),
+])
+
+let repair = @mooncolorkit.suggest_accessible_foreground(
+  @mooncolorkit.Rgb::from_hex("#AAAAAA"),
+  @mooncolorkit.Rgb::from_hex("#FFFFFF"),
 )
 
-println(theme.to_json())
-println(theme.palette.to_css_vars(prefix="brand"))
+let theme = @mooncolorkit.SemanticTheme::build(
+  "product-light",
+  @mooncolorkit.Rgb::from_hex("#FFFFFF"),
+  @mooncolorkit.Rgb::from_hex("#F4F7FA"),
+  @mooncolorkit.Rgb::from_hex("#2F6FED"),
+)
+
+println(report.to_json())
+println(repair.to_json())
+println(theme.to_design_tokens_json())
+println(theme.to_css_vars())
 ```
 
-运行演示：
+## 当前交付
+
+- `Rgb`、`Hsl`、HEX、混色、渐变和调色板等兼容基础层；
+- 标准 sRGB 线性化、相对亮度与 1:1 至 21:1 对比度计算；
+- 普通文本/大号文本的 AA、AAA 分级；
+- `ColorRole`、`ContrastAudit`、`AuditReport` 批量审计模型；
+- 最小采样改色建议及修复前后证据；
+- `SemanticTheme` 语义主题生成和自审计；
+- DTCG 2025.10 `colorSpace/components/alpha/hex` 颜色对象；
+- CSS 变量、JSON 报告和 CLI 端到端演示；
+- 22 项确定性测试，覆盖边界阈值和跨模块流程。
+
+## 验证
 
 ```bash
+moon fmt --check
+moon check
+moon test
 moon run cmd/main
 ```
-
-运行测试：
-
-```bash
-moon test
-```
-
-## 设计原则
-
-MoonColorKit 的定位是 MoonBit 基础算法生态库，而不是某个前端框架的封装层。项目在 API 设计上遵循三点：
-
-1. 保持数据结构直接、可检查、易序列化。
-2. 保持核心算法后端中立，不引入 IO、浏览器或平台依赖。
-3. 用确定性测试覆盖每个公开能力，便于后续持续扩展。
 
 ## 仓库
 
 - GitHub: <https://github.com/cn-hww/mooncolorkit>
-- GitLink: 待从 GitHub 导入后填写
+- GitLink: <https://www.gitlink.org.cn/cn-hww/mooncolorkit>
